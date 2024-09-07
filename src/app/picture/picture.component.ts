@@ -1,6 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
+
+import { jsPDF } from 'jspdf';
+import { DataService } from '../data.service';
+
+
 
 @Component({
   selector: 'app-picture',
@@ -10,6 +15,7 @@ import { ReactiveFormsModule } from '@angular/forms';
   styleUrls: ['./picture.component.scss']
 })
 export class PictureComponent implements OnInit {
+  dataService = inject(DataService);
   postForm!: FormGroup;
   selectedImage: File | null = null;
 
@@ -41,11 +47,43 @@ export class PictureComponent implements OnInit {
     }
     console.log('Form Data:', formData);
 
-    // Przesyłanie formularza do serwera, np. przez HttpClient
-    // this.http.post('YOUR_API_URL', formData).subscribe(response => {
-    //   console.log(response);
-    // });
-
     this.postForm.reset();
   }
+
+  
+  generatePDF() {
+    const doc = new jsPDF();
+  
+    // Dodaj tytuł
+    doc.setFontSize(20);
+    doc.text(`${this.dataService.clientData.title}`, 20, 20);
+  
+    // Wymiary obrazka (zachowanie proporcji)
+    const imageWidth = 40; // Nowa szerokość obrazka
+    const imageHeight = (imageWidth / 2); // Proporcja 2:1 (przykład), dostosuj do właściwej proporcji
+  
+    // Dodaj obrazek
+    doc.addImage(
+      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhcP8gSO07lyUkq1FYILk1Hxpy9aaOS4NFcg&s',
+      'JPG',
+      20,
+      40, // Pozycja Y obrazka pod tytułem
+      imageWidth, // Ustawiona szerokość
+      imageHeight // Przeliczona wysokość zachowująca proporcje
+    );
+  
+    // Dodaj opis pod obrazkiem
+    doc.setFont('Helvetica');
+    doc.setFontSize(12);
+    doc.text(`${this.dataService.clientData.description}`, 20, 70 + imageHeight); // Dodanie wysokości obrazka do pozycji Y tekstu
+  
+    let yPOS = 50;
+
+    
+
+    // Zapisz PDF
+    doc.save('picture.pdf');
+  }
+  
+  
 }
